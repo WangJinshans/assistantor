@@ -5,9 +5,11 @@ import (
 	"assistantor/api/v1/user"
 	"assistantor/config"
 	_ "assistantor/docs"
+	"assistantor/global"
 	"assistantor/middlerware"
 	"assistantor/model"
 	"assistantor/repository"
+	"context"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
@@ -23,8 +25,8 @@ import (
 // 根目录: swag init -g cmd/inline_server/main.go
 
 var (
-	conf   config.AssistantConfig
-	engine *gorm.DB
+	conf        config.AssistantConfig
+	engine      *gorm.DB
 	redisClient *redis.Client
 )
 
@@ -57,12 +59,12 @@ func initDatabase() {
 
 func initRedis() {
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:               conf.Redis.Address,
-		Password:           conf.Redis.Password,
-		DB:                 conf.Redis.DB,
+		Addr:     conf.Redis.Address,
+		Password: conf.Redis.Password,
+		DB:       conf.Redis.DB,
 	})
-	res,err :=redisClient.Set("movie_key", "value", time.Second*60).Result()
-	log.Info().Msgf("res is: %s, error is: %v", res,err)
+	res, err := redisClient.Set("movie_key", "value", time.Second*60).Result()
+	log.Info().Msgf("res is: %s, error is: %v", res, err)
 	repository.SetupRedisClient(redisClient)
 }
 
@@ -73,6 +75,7 @@ func StartServer() {
 
 	r.GET("/get_public_key", login.GetPublicKey)
 	r.POST("/login", login.Login)
+	r.POST("/logout", login.Logout)
 	r.POST("/register", login.Register)
 	r.POST("/refresh_token", login.RefreshToken)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -90,5 +93,8 @@ func StartServer() {
 }
 
 func main() {
+
+	ctx := context.Background()
+	go global.StartCleanKey(ctx)
 	StartServer()
 }

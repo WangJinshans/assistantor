@@ -23,3 +23,13 @@ func SaveToken(token string, userId string) (err error) {
 	}
 	return
 }
+
+func RemoveToken(userId string) (err error) {
+	key := fmt.Sprintf("%s:%s", common.TokenKey, userId)
+	log.Info().Msgf("redis key is: %s", key)
+	_, err = redisClient.Del(key).Result()
+	if err != nil {
+		log.Error().Msgf("delete redis key failed, error is: %v", err)
+	}
+	return
+}

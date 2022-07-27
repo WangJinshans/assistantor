@@ -19,6 +19,7 @@ import (
 type Response struct {
 	Message string `json:"message,omitempty"`
 	CtxId   string `json:"ctx_id"`
+	UserId  string `json:"user_id"`
 }
 
 // @获取rsa公钥
@@ -92,20 +93,24 @@ func Login(context *gin.Context) {
 		context.JSON(200, gin.H{
 			"message": "failed",
 			"token":   "",
+			"user_id": "",
 		})
 		return
 	}
+	global.DeleteKey(contextId)
 	err = repository.SaveToken(token, u.UserId)
 	if err != nil {
 		context.JSON(200, gin.H{
 			"message": "failed",
 			"token":   "",
+			"user_id": "",
 		})
 		return
 	}
 	context.JSON(200, gin.H{
 		"message": "success",
 		"token":   token,
+		"user_id": u.UserId,
 	})
 }
 
@@ -141,6 +146,7 @@ func Register(context *gin.Context) {
 		log.Error().Msgf("rsa decrypt error: %v", err.Error())
 		return
 	}
+	global.DeleteKey(contextId)
 	userId := fmt.Sprintf("user_%d", time.Now().Unix())
 	user.UserId = userId
 	user.PassWord = string(passWord)
@@ -175,14 +181,14 @@ func Logout(ctx *gin.Context) {
 	var user model.User
 	err := ctx.BindJSON(&user)
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Info().Msgf("logout error: %v", err.Error())
 		ctx.JSON(200, gin.H{
 			"message": "password error",
 		})
 		return
 	}
-	contextId := ctx.GetHeader("ctx_id")
-	global.DeleteKey(contextId)
+
+	repository.RemoveToken(user.UserId)
 	ctx.JSON(200, gin.H{
 		"message": "ok",
 	})
