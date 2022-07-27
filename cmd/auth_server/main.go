@@ -2,9 +2,7 @@ package main
 
 import (
 	"assistantor/api/login"
-	"assistantor/api/v1/user"
 	"assistantor/config"
-	_ "assistantor/docs"
 	"assistantor/middlerware"
 	"assistantor/model"
 	"assistantor/repository"
@@ -12,13 +10,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
-
-// 根目录: swag init -g cmd/inline_server/main.go
 
 var (
 	conf   config.AssistantConfig
@@ -60,16 +54,6 @@ func StartServer() {
 	r.POST("/login", login.Login)
 	r.POST("/register", login.Register)
 	r.POST("/refresh_token", login.RefreshToken)
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	v1 := r.Group("v1")
-	v1.Use(middlerware.JwtAuth())
-	{
-		userGroup := v1.Group("user")
-		{
-			userGroup.GET("/user_info", user.UserApi.GetUserInfo)
-		}
-	}
 
 	r.Run(":8088")
 }

@@ -1,0 +1,26 @@
+definitions:
+  login.Response:
+    properties:
+      ctx_id:
+        type: string
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /get_public_key:
+    get:
+      description: get rsa public key
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/login.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/login.Response'
+swagger: "2.0"

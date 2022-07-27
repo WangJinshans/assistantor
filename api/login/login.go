@@ -16,11 +16,22 @@ import (
 	"time"
 )
 
+type Response struct {
+	Message string `json:"message,omitempty"`
+	CtxId   string `json:"ctx_id"`
+}
+
+// @获取rsa公钥
+// @Description get rsa public key
+// @Produce json
+// @Success 200 {object} Response
+// @Failure 400 {object} Response
+// @Router /get_public_key [get]
 func GetPublicKey(c *gin.Context) {
 	publicKeyStr, privateKeyStr, err := utils.GenRsaKey(1024)
 	if err != nil {
 		log.Error().Msg("密钥文件生成失败！")
-		c.JSON(500, gin.H{
+		c.JSON(200, gin.H{
 			"message": "server error",
 		})
 		return
@@ -157,5 +168,23 @@ func RefreshToken(ctx *gin.Context) {
 			"message": "empty token",
 		})
 	}
+	return
+}
+
+func Logout(ctx *gin.Context) {
+	var user model.User
+	err := ctx.BindJSON(&user)
+	if err != nil {
+		log.Info().Msg(err.Error())
+		ctx.JSON(200, gin.H{
+			"message": "password error",
+		})
+		return
+	}
+	contextId := ctx.GetHeader("ctx_id")
+	global.DeleteKey(contextId)
+	ctx.JSON(200, gin.H{
+		"message": "ok",
+	})
 	return
 }

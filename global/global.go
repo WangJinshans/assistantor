@@ -33,3 +33,11 @@ func GetPrivateKey(key string) (string, error) {
 	err := errors.New("empty error")
 	return "", err
 }
+
+func DeleteKey(key string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	
+	delete(keyMap, key)
+	return
+}

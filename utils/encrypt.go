@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"github.com/rs/zerolog/log"
 )
 
 
@@ -58,7 +57,7 @@ func GenRsaKey(bits int) (publicKeyStr string, privateKeyStr string, err error) 
 
 	privateKeyStr = string(pem.EncodeToMemory(priBlock))
 
-	log.Info().Msgf("=======私钥文件内容=========%s", privateKeyStr)
+	//log.Info().Msgf("=======私钥文件内容=========%s", privateKeyStr)
 	// 生成公钥文件
 	publicKey := &privateKey.PublicKey
 	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
@@ -71,7 +70,7 @@ func GenRsaKey(bits int) (publicKeyStr string, privateKeyStr string, err error) 
 	}
 
 	publicKeyStr = string(pem.EncodeToMemory(publicBlock))
-	log.Info().Msgf("=======公钥文件内容=========%v", publicKeyStr)
+	//log.Info().Msgf("=======公钥文件内容=========%v", publicKeyStr)
 
 	return
 }
