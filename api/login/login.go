@@ -87,7 +87,7 @@ func Login(context *gin.Context) {
 		return
 	}
 	var token string
-	token, err = auth.GenerateToken(user.UserId)
+	token, err = auth.GenerateToken(u.UserId)
 	if err != nil {
 		context.JSON(200, gin.H{
 			"message": "failed",
@@ -95,7 +95,7 @@ func Login(context *gin.Context) {
 		})
 		return
 	}
-	err = repository.SaveToken(token, user.UserId)
+	err = repository.SaveToken(token, u.UserId)
 	if err != nil {
 		context.JSON(200, gin.H{
 			"message": "failed",

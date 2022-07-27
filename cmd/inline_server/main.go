@@ -11,11 +11,13 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/rs/zerolog/log"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"time"
 )
 
 // 根目录: swag init -g cmd/inline_server/main.go
@@ -23,6 +25,7 @@ import (
 var (
 	conf   config.AssistantConfig
 	engine *gorm.DB
+	redisClient *redis.Client
 )
 
 func init() {
@@ -32,6 +35,7 @@ func init() {
 		return
 	}
 	initDatabase()
+	initRedis()
 }
 
 func initDatabase() {
@@ -49,6 +53,17 @@ func initDatabase() {
 		panic(err)
 	}
 	repository.SetupEngine(engine)
+}
+
+func initRedis() {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:               conf.Redis.Address,
+		Password:           conf.Redis.Password,
+		DB:                 conf.Redis.DB,
+	})
+	res,err :=redisClient.Set("movie_key", "value", time.Second*60).Result()
+	log.Info().Msgf("res is: %s, error is: %v", res,err)
+	repository.SetupRedisClient(redisClient)
 }
 
 func StartServer() {
