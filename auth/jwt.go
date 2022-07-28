@@ -35,8 +35,12 @@ func GenerateToken(userId string) (string, error) {
 }
 
 //验证jwt token
-func VerifyToken(ctx *gin.Context) (*JWTClaims, error) {
+func Verify(ctx *gin.Context) (*JWTClaims, error) {
 	strToken := ctx.Request.Header.Get("token")
+	return VerifyToken(strToken)
+}
+
+func VerifyToken(strToken string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(strToken, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(Secret), nil
 	})
@@ -55,7 +59,7 @@ func VerifyToken(ctx *gin.Context) (*JWTClaims, error) {
 }
 
 func Refresh(c *gin.Context) (token string, userId string, err error) {
-	claims, err := VerifyToken(c)
+	claims, err := Verify(c)
 	if err != nil {
 		return
 	}

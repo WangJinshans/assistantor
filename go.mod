@@ -12,6 +12,7 @@ require (
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matryer/try v0.0.0-20161228173917-9ac251b645a2
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -19,6 +20,7 @@ require (
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/rs/zerolog v1.27.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe
 	github.com/swaggo/gin-swagger v1.5.1
 	github.com/swaggo/swag v1.8.4
