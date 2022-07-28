@@ -37,9 +37,55 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/login": {
+            "get": {
+                "description": "登录",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户名",
+                        "name": "user_name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "密码",
+                        "name": "pass_word",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/login.LoginResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "login.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "login.Response": {
             "type": "object",
             "properties": {
@@ -47,6 +93,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "message": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

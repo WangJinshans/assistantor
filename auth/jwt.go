@@ -54,7 +54,12 @@ func VerifyToken(ctx *gin.Context) (*JWTClaims, error) {
 	return claims, nil
 }
 
-func Refresh(c *gin.Context) (string, error) {
-	claims, _ := VerifyToken(c)
-	return GenerateToken(claims.UserId)
+func Refresh(c *gin.Context) (token string, userId string, err error) {
+	claims, err := VerifyToken(c)
+	if err != nil {
+		return
+	}
+	userId = claims.UserId
+	token, err = GenerateToken(claims.UserId)
+	return
 }
