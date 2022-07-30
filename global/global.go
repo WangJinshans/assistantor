@@ -3,16 +3,26 @@ package global
 import (
 	"context"
 	"errors"
+	"github.com/casbin/casbin/v2"
 	"sync"
 	"time"
 )
 
 var keyMap map[string]map[string]interface{}
 var mutex sync.RWMutex
+var enforcer *casbin.Enforcer
 
 func init() {
 	// uuid - private key : public key
 	keyMap = make(map[string]map[string]interface{})
+}
+
+func SetEnforcer(e *casbin.Enforcer) {
+	enforcer = e
+}
+
+func GetEnforcer() *casbin.Enforcer {
+	return enforcer
 }
 
 func AddKeyValue(key string, privateKeyStr string, publicKeyStr string) {
