@@ -22,6 +22,12 @@ type Response struct {
 	UserId  string `json:"user_id"`
 }
 
+type LoginResponse struct {
+	Message string `json:"message,omitempty"`
+	UserId  string `json:"user_id"`
+	Token   string `json:"token"`
+}
+
 // @获取rsa公钥
 // @Description get rsa public key
 // @Produce json
@@ -45,6 +51,13 @@ func GetPublicKey(c *gin.Context) {
 	})
 }
 
+// @登录
+// @Description 登录
+// @Produce json
+// @Param user_name formData string true "用户名"
+// @Param pass_word formData string true "密码"
+// @Success 200 {object} LoginResponse
+// @Router /login [get]
 func Login(context *gin.Context) {
 
 	var user model.User
@@ -151,13 +164,35 @@ func Register(context *gin.Context) {
 	user.UserId = userId
 	user.PassWord = string(passWord)
 	repository.UserRepos.SaveUser(&user)
+
+	var token string
+	token, err = auth.GenerateToken(userId)
+	if err != nil {
+		context.JSON(200, gin.H{
+			"message": "failed",
+			"token":   "",
+			"user_id": "",
+		})
+		return
+	}
+	err = repository.SaveToken(token, userId)
+	if err != nil {
+		context.JSON(200, gin.H{
+			"message": "failed",
+			"token":   "",
+			"user_id": "",
+		})
+		return
+	}
 	context.JSON(200, gin.H{
 		"message": userId,
+		"token":   token,
+		"user_id": userId,
 	})
 }
 
 func RefreshToken(ctx *gin.Context) {
-	token, err := auth.Refresh(ctx)
+	token, userId, err := auth.Refresh(ctx)
 	if err != nil {
 		log.Info().Msgf("refresh token error: %v", err)
 		ctx.Abort()
@@ -168,12 +203,20 @@ func RefreshToken(ctx *gin.Context) {
 			"code":    common.Success,
 			"message": "",
 		})
-	} else {
-		ctx.JSON(200, gin.H{
-			"code":    common.EmptyToken,
-			"message": "empty token",
-		})
+		return
 	}
+	err = repository.SaveToken(token, userId)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"message": "failed",
+			"token":   "",
+			"user_id": "",
+		})
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"message": "empty token",
+	})
 	return
 }
 

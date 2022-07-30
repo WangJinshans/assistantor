@@ -120,6 +120,10 @@ func StartServer() {
 	r.POST("/logout", login.Logout)
 	r.POST("/register", login.Register)
 	r.POST("/refresh_token", login.RefreshToken)
+	r.GET("/get_qrcode", login.InitQrCode)
+	r.GET("/get_qrcode_status", login.QueryQrCode)
+	r.POST("/set_qrcode_status", login.SetQrCodeStatus)
+	r.POST("/scan_qrcode", login.ScanQrCode)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("v1")
@@ -152,6 +156,8 @@ type Company struct {
 
 func main() {
 
+	p, _ := global.GetExecutablePath()
+	log.Info().Msgf("p is: %s", p)
 	ctx := context.Background()
 	go global.StartCleanKey(ctx)
 	StartServer()
