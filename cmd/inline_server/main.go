@@ -94,21 +94,6 @@ func initAuth() {
 		log.Info().Msgf("loadPolicy error: %v", err)
 		panic(err)
 	}
-
-	// 创建一个角色,并赋于权限
-	// admin 这个角色可以访问GET 方式访问 /api/v2/ping
-	//var ok bool
-	//ok,err = enforcer.AddPolicy("admin","/api/v2/ping","GET")
-	//if !ok {
-	//	log.Info().Msg("policy is exist")
-	//} else {
-	//	log.Info().Msg("policy is not exist, adding")
-	//}
-
-	//enforcer.AddRoleForUser("tom","admin")
-	//enforcer.AddRoleForUser("test","root")
-	//enforcer.DeleteUser("test")
-	//enforcer.AddRoleForUser("lance", "admin")
 }
 
 func StartServer() {
