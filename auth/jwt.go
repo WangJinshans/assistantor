@@ -59,6 +59,7 @@ func VerifyToken(strToken string) (*JWTClaims, error) {
 }
 
 func Refresh(c *gin.Context) (token string, userId string, err error) {
+	// 刷新策略 https://blog.csdn.net/weixin_39581652/article/details/110801338
 	claims, err := Verify(c)
 	if err != nil {
 		return

@@ -97,7 +97,7 @@ func initAuth() {
 }
 
 func StartServer() {
-	r := gin.Default()
+	r := gin.New()
 	r.Use(middlerware.Cors())
 	r.Use(gin.Recovery())
 
@@ -113,8 +113,8 @@ func StartServer() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("v1")
-	v1.Use(middlerware.JwtAuth())      // token
-	v1.Use(middlerware.AuthMiddleWare) // 权限
+	v1.Use(middlerware.JwtAuth())        // token
+	v1.Use(middlerware.AuthMiddleWare()) // 权限
 	{
 		userGroup := v1.Group("user")
 		{
