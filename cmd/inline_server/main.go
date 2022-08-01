@@ -2,11 +2,13 @@ package main
 
 import (
 	"assistantor/api/login"
+	"assistantor/api/role"
 	"assistantor/api/v1/user"
 	"assistantor/config"
 	_ "assistantor/docs"
 	"assistantor/global"
 	"assistantor/middlerware"
+	"assistantor/model"
 	"assistantor/repository"
 	"context"
 	"fmt"
@@ -38,8 +40,8 @@ func init() {
 		return
 	}
 	initDatabase()
-	// initRedis()
-	// initAuth()
+	initRedis()
+	initAuth()
 }
 
 func initDatabase() {
@@ -55,7 +57,7 @@ func initDatabase() {
 		panic(err)
 	}
 
-	err = engine.AutoMigrate(&User{}, &Company{})
+	err = engine.AutoMigrate(&model.User{}, &model.FilePartition{}, &model.PartitionInfo{})
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +94,6 @@ func initAuth() {
 		log.Info().Msgf("loadPolicy error: %v", err)
 		panic(err)
 	}
-
 
 	// 创建一个角色,并赋于权限
 	// admin 这个角色可以访问GET 方式访问 /api/v2/ping
@@ -134,24 +135,15 @@ func StartServer() {
 		{
 			userGroup.GET("/user_info", user.UserApi.GetUserInfo)
 		}
+		roleGroup := v1.Group("role")
+		{
+			roleGroup.GET("/role_info", role.RoleApi.GetAllRoles)
+			roleGroup.DELETE("/delete_role", role.RoleApi.DeleteRole)
+			roleGroup.PUT("/add_user_role", role.RoleApi.AddRoleForUser)
+		}
 	}
 
 	r.Run(":8088")
-}
-
-type User struct {
-	gorm.Model
-	ID        int       `gorm:"TYPE:int(11);NOT NULL;PRIMARY_KEY;INDEX"`
-	Name      string    `gorm:"TYPE: VARCHAR(255); DEFAULT:'';INDEX"`
-	Companies []Company `gorm:"FOREIGNKEY:UserId;ASSOCIATION_FOREIGNKEY:ID"`
-}
-
-type Company struct {
-	gorm.Model
-	Industry int    `gorm:"TYPE:INT(11);DEFAULT:0"`
-	Name     string `gorm:"TYPE:VARCHAR(255);DEFAULT:'';INDEX"`
-	Job      string `gorm:"TYPE:VARCHAR(255);DEFAULT:''"`
-	UserId   int    `gorm:"TYPE:int(11);NOT NULL;INDEX"`
 }
 
 func main() {

@@ -33,7 +33,7 @@ func FinishFilePartitions(ps model.FilePartition) (err error) {
 
 	for _, item := range filePartitions {
 		basePath := "./upload/partition/"
-		filename := basePath + item.FilePath
+		filename := basePath + item.SegmentPath
 		var bs []byte
 		bs, err = ioutil.ReadFile(filename)
 		if err != nil {

@@ -21,6 +21,31 @@ func (*ApiRole) GetAllRoles(ctx *gin.Context) {
 	return
 }
 
+func (*ApiRole) DeleteRole(ctx *gin.Context) {
+	enforcer := global.GetEnforcer()
+	role, ok := ctx.Params.Get("role")
+	if !ok {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "empty role",
+		})
+		return
+	}
+	ok, err := enforcer.DeleteRole(role)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "delete role error",
+		})
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"code":    common.Success,
+		"message": "ok",
+	})
+	return
+}
+
 func (*ApiRole) AddRoleForUser(ctx *gin.Context) {
 	enforcer := global.GetEnforcer()
 	userId, ok := ctx.Params.Get("user_id")

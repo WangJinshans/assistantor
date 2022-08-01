@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"assistantor/model"
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/sqlite" // Sqlite driver based on GGO
 	"gorm.io/gorm"
@@ -21,6 +22,38 @@ type Company struct {
 	UserName string `gorm:"size:10"`
 	Name     string `json:"name"`
 	CSn      string `json:"cSn"`
+}
+
+func TestGormFilePartition(t *testing.T) {
+
+	engine, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	if err != nil {
+		log.Info().Msgf("create db error: %v", err)
+		return
+	}
+	engine.AutoMigrate(&model.FilePartition{}, &model.PartitionInfo{})
+
+	p1 := model.PartitionInfo{
+		SegmentId:   "segment1",
+		SegmentName: "segment1",
+		SegmentPath: "zzzzz",
+	}
+
+	p2 := model.PartitionInfo{
+		SegmentId:   "segment2",
+		SegmentName: "segment2",
+		SegmentPath: "xxxx",
+	}
+	f := model.FilePartition{
+		FileId:   "1111",
+		FileName: "1111.mp4",
+		FilePath: "xxxxx/xxxx",
+		PartitionList: []model.PartitionInfo{
+			p1,
+			p2,
+		},
+	}
+	engine.Save(&f)
 }
 
 func TestGorm(t *testing.T) {
