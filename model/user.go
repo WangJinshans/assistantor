@@ -13,3 +13,4 @@ type User struct {
 	PhoneNumber string `json:"phone_number"`
 	TimeStamp   int64  `json:"time_stamp"`
 }
+

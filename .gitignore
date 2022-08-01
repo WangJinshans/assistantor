@@ -2,3 +2,4 @@
 *.idea
 *.toml
 *.sum
+*.db

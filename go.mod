@@ -12,7 +12,6 @@ require (
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.3.0
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matryer/try v0.0.0-20161228173917-9ac251b645a2
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -30,5 +29,6 @@ require (
 	golang.org/x/sys v0.0.0-20220727055044-e65921a090b8 // indirect
 	golang.org/x/tools v0.1.11 // indirect
 	gorm.io/driver/mysql v1.3.5
+	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8
 )
