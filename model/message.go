@@ -14,6 +14,7 @@ type Message struct {
 
 type MediaResource struct {
 	gorm.Model
+	MessageID    uint // 消息ID
 	ResourceID   string
 	ResourceName string
 	ResourceType int // url 静态

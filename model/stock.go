@@ -5,6 +5,6 @@ import "gorm.io/gorm"
 // 库存
 type Stock struct {
 	gorm.Model
-	Address   string
-	StockName string
+	Address    string
+	StockName  string
 }
