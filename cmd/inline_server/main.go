@@ -3,6 +3,7 @@ package main
 import (
 	"assistantor/api/login"
 	"assistantor/api/role"
+	"assistantor/api/v1/order"
 	"assistantor/api/v1/user"
 	"assistantor/config"
 	_ "assistantor/docs"
@@ -128,8 +129,8 @@ func StartServer() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("v1")
-	v1.Use(middlerware.JwtAuth())        // token
-	v1.Use(middlerware.AuthMiddleWare()) // 权限
+	//v1.Use(middlerware.JwtAuth())        // token
+	//v1.Use(middlerware.AuthMiddleWare()) // 权限
 	{
 		userGroup := v1.Group("user")
 		{
@@ -141,8 +142,11 @@ func StartServer() {
 			roleGroup.DELETE("/delete_role", role.RoleApi.DeleteRole)
 			roleGroup.PUT("/add_user_role", role.RoleApi.AddRoleForUser)
 		}
+		orderGroup := v1.Group("order")
+		{
+			orderGroup.POST("/create_order", order.CreateOrder)
+		}
 	}
-
 	r.Run(":8088")
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 	qrcode "github.com/skip2/go-qrcode"
 	"path/filepath"
-	"strconv"
 	"time"
 )
 
@@ -98,15 +97,19 @@ func InitQrCode(ctx *gin.Context) () {
 
 // 查询二维码状态
 func QueryQrCode(ctx *gin.Context) () {
-	qrcodeId, ok := ctx.Params.Get("qrcode_id")
-	if !ok {
+	type req struct {
+		QrcodeId string `json:"qrcode_id"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "no qrcode id found",
 		})
 	}
 
-	info, err := repository.GetQrCode(qrcodeId)
+	info, err := repository.GetQrCode(parameter.QrcodeId)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
@@ -124,16 +127,20 @@ func QueryQrCode(ctx *gin.Context) () {
 
 // 扫描二维码状态
 func ScanQrCode(ctx *gin.Context) () {
-	token, ok := ctx.Params.Get("token") // 账户token
-	qrcodeId, ok := ctx.Params.Get("qrcode_id")
-	if !ok {
+	type req struct {
+		Token    string `json:"token"`
+		QrCodeId string `json:"qrcode_id"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "no qrcode id found",
 		})
 	}
 
-	claim, err := auth.VerifyToken(token)
+	claim, err := auth.VerifyToken(parameter.Token)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
@@ -144,7 +151,7 @@ func ScanQrCode(ctx *gin.Context) () {
 
 	userId := claim.UserId
 	qrCode := model.QrCodeInfo{
-		QrCodeId: qrcodeId,
+		QrCodeId: parameter.QrCodeId,
 		IsValid:  "true",
 		Status:   common.ScanStatus,
 		UserId:   userId,
@@ -164,17 +171,21 @@ func ScanQrCode(ctx *gin.Context) () {
 
 // 更新二维码状态
 func SetQrCodeStatus(ctx *gin.Context) () {
-	token, ok := ctx.Params.Get("token") // 账户token
-	qrcodeId, ok := ctx.Params.Get("qrcode_id")
-	statusString, ok := ctx.Params.Get("status")
-	if !ok {
+	type req struct {
+		Token    string `json:"token"`
+		QrCodeId string `json:"qrcode_id"`
+		Status   int    `json:"status"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "no qrcode id found",
 		})
 	}
 
-	claim, err := auth.VerifyToken(token)
+	claim, err := auth.VerifyToken(parameter.Token)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
@@ -183,16 +194,7 @@ func SetQrCodeStatus(ctx *gin.Context) () {
 		return
 	}
 
-	s, err := strconv.ParseInt(statusString, 10, 64)
-	if err != nil {
-		ctx.JSON(200, gin.H{
-			"code":    common.Fail,
-			"message": "token error",
-		})
-		return
-	}
-
-	if !IsValidStatus(int(s)) {
+	if !IsValidStatus(parameter.Status) {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "invalid status",
@@ -202,9 +204,9 @@ func SetQrCodeStatus(ctx *gin.Context) () {
 
 	userId := claim.UserId
 	qrCode := model.QrCodeInfo{
-		QrCodeId: qrcodeId,
+		QrCodeId: parameter.QrCodeId,
 		IsValid:  "true",
-		Status:   int(s),
+		Status:   parameter.Status,
 		UserId:   userId,
 	}
 

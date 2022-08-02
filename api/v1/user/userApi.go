@@ -13,8 +13,12 @@ type ApiUser struct {
 }
 
 func (*ApiUser) GetUserInfo(ctx *gin.Context) {
-	userId, ok := ctx.Params.Get("user_id")
-	if !ok {
+	type req struct {
+		UserId string `json:"user_id"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "user id not found",
@@ -22,7 +26,7 @@ func (*ApiUser) GetUserInfo(ctx *gin.Context) {
 		return
 	}
 
-	user, err := repository.UserRepos.GetUser(userId)
+	user, err := repository.UserRepos.GetUser(parameter.UserId)
 	if err != nil {
 		log.Info().Msgf("fail to get user, error is: %v", err)
 		ctx.JSON(200, gin.H{

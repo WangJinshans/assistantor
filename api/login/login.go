@@ -132,7 +132,6 @@ func Register(context *gin.Context) {
 	var user model.User
 	err := context.BindJSON(&user)
 	if err != nil {
-		log.Error().Msg(err.Error())
 		context.JSON(200, gin.H{
 			"message": "password error",
 		})

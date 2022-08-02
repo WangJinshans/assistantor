@@ -22,23 +22,28 @@ func (*ApiRole) GetAllRoles(ctx *gin.Context) {
 }
 
 func (*ApiRole) DeleteRole(ctx *gin.Context) {
-	enforcer := global.GetEnforcer()
-	role, ok := ctx.Params.Get("role")
-	if !ok {
+	type req struct {
+		Role string `json:"role"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "empty role",
 		})
 		return
 	}
-	ok, err := enforcer.DeleteRole(role)
-	if err != nil {
+	enforcer := global.GetEnforcer()
+	ok, err := enforcer.DeleteRole(parameter.Role)
+	if err != nil || !ok {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
 			"message": "delete role error",
 		})
 		return
 	}
+
 	ctx.JSON(200, gin.H{
 		"code":    common.Success,
 		"message": "ok",
@@ -48,6 +53,18 @@ func (*ApiRole) DeleteRole(ctx *gin.Context) {
 
 func (*ApiRole) AddRoleForUser(ctx *gin.Context) {
 	enforcer := global.GetEnforcer()
+	type req struct {
+		UserId string `json:"user_id"`
+	}
+	var parameter req
+	err := ctx.BindJSON(&parameter)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "",
+		})
+		return
+	}
 	userId, ok := ctx.Params.Get("user_id")
 	if !ok {
 		ctx.JSON(200, gin.H{
