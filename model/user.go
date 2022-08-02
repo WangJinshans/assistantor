@@ -17,8 +17,6 @@ type User struct {
 	EmailAddr   string `json:"email_addr"`
 	PhoneNumber string `json:"phone_number"`
 	TimeStamp   int64  `json:"time_stamp"`
-	AddressID   uint
 
-	//AddressInfo Address `gorm:"foreignKey:AddressID;references:ID"`
-	//DeliveryAddressInfo []DeliveryAddress `gorm:"foreignKey:UserID;references:UserId"`
+	AddressID   uint
 }

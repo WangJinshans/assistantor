@@ -40,16 +40,15 @@ func init() {
 		return
 	}
 	initDatabase()
-	initRedis()
-	initAuth()
+	//initRedis()
+	//initAuth()
 }
 
 func initDatabase() {
 	var err error
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", conf.Mysql.UserName, conf.Mysql.Password, conf.Mysql.Address, conf.Mysql.Database)
-
-	log.Info().Msgf("connection string is: %s", dsn)
+	//log.Info().Msgf("connection string is: %s", dsn)
 	engine, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		//Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -57,80 +56,25 @@ func initDatabase() {
 		panic(err)
 	}
 
-	//err = engine.AutoMigrate(&model.User{}, &model.FilePartition{}, &model.PartitionInfo{}, &model.Message{}, &model.MediaResource{}, &model.DeliveryAddress{}, &model.Address{}, &model.Store{}, &model.Stock{}, &model.OrderProduct{}, &model.Order{})
-	err = engine.AutoMigrate(&model.User{}, &model.DeliveryAddress{}, &model.Address{}, &model.Store{}, &model.Stock{}, &model.OrderProduct{}, &model.Order{})
+	err = SyncTables()
 	if err != nil {
 		panic(err)
 	}
 	repository.SetupEngine(engine)
-
-	CreateData()
 }
 
-func CreateData() {
-
-	//da1 := model.DeliveryAddress{
-	//	ProvinceName: "ddd",
-	//	DistrictName: "dd",
-	//	StreetName:   "d",
-	//	AddressType:  1,
-	//}
-	//da2 := model.DeliveryAddress{
-	//	ProvinceName: "ddd2",
-	//	DistrictName: "dd2",
-	//	StreetName:   "d2",
-	//}
-	u := model.User{
-		UserLevel: 1,
-		UserId:    "11111",
-		UserName:  "lance",
-		//AddressInfo: model.Address{
-		//	ProvinceName: "aaa",
-		//	DistrictName: "bbb",
-		//	StreetName:   "ccc",
-		//},
-		//DeliveryAddressInfo: []model.DeliveryAddress{
-		//	da1, da2,
-		//},
-	}
-	//
-	//err := engine.Create(&da1).Error
-	//log.Info().Msgf("error is: %v", err)
-	//err = engine.Create(&da2).Error
-	//log.Info().Msgf("error is: %v", err)
-	err := engine.Create(&u).Error
-	log.Info().Msgf("error is: %v", err)
-
-	//p1 := model.OrderProduct{
-	//	ProductName: "hhhh",
-	//	Description: "eat",
-	//	StockInfo: model.Stock{
-	//		Address:   "xxxxxxxxxxxxxxxzzzzzzzzz",
-	//		StockName: "stock",
-	//	},
-	//}
-	//
-	//p2 := model.OrderProduct{
-	//	ProductName: "hhxzzhh",
-	//	Description: "play",
-	//	StockInfo: model.Stock{
-	//		Address:   "ccccccccccccccccccccccc",
-	//		StockName: "stock2",
-	//	},
-	//}
-	//
-	//o := model.Order{
-	//	OrderID:     "xxxxxxxxxxxxxx",
-	//	OrderStatus: 1,
-	//	UserInfo:    u,
-	//	AddressInfo: da1,
-	//	ProductList: []model.OrderProduct{
-	//		p1, p2,
-	//	},
-	//}
-	//
-	//err := engine.Save(&o).Error
-	//log.Info().Msgf("error is: %v", err)
+func SyncTables() (err error) {
+	err = engine.AutoMigrate(
+		&model.User{},
+		&model.FilePartition{}, &model.PartitionInfo{},
+		&model.Message{}, &model.MediaResource{},
+		&model.Address{}, &model.DeliveryAddress{},
+		&model.Store{},
+		&model.Stock{},
+		&model.Product{}, &model.OrderProduct{},
+		&model.Order{},
+	)
+	return
 }
 
 func initRedis() {
@@ -204,8 +148,8 @@ func StartServer() {
 
 func main() {
 
-	p, _ := global.GetExecutablePath()
-	log.Info().Msgf("p is: %s", p)
+	//p, _ := global.GetExecutablePath()
+	//log.Info().Msgf("p is: %s", p)
 	ctx := context.Background()
 	go global.StartCleanKey(ctx)
 	StartServer()

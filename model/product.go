@@ -10,10 +10,7 @@ type Product struct {
 	Total       int
 	LeftCount   int
 
-	// 外键
-	StockID   uint  `gorm:"index"`
-	//StockInfo Stock `gorm:"foreignKey:StockID;references:ID"` // 所在仓库
-
+	StockID uint
 }
 
 type OrderProduct struct {
@@ -23,10 +20,7 @@ type OrderProduct struct {
 	ProductType int
 	Total       int
 	LeftCount   int
+
 	StockID     uint   `gorm:"index"`
 	OrderID     string `gorm:"index"`
-
-	// 外键
-	//StockInfo Stock `gorm:"foreignKey:StockID;references:ID"` // 所在仓库
-
 }

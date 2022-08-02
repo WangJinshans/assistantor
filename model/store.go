@@ -11,8 +11,4 @@ type Store struct {
 
 	AddressID uint   `gorm:"index"`
 	UserID    string `gorm:"index"`
-
-	//// 外键
-	//StoreAddress Address `gorm:"foreignKey:AddressID;references:ID"`  // 地址
-	//Owner        User    `gorm:"foreignKey:UserId;references:UserID"` // 店主
 }

@@ -21,5 +21,6 @@ type DeliveryAddress struct {
 	DistrictName string
 	StreetName   string
 	ExtraInfo    string
-	UserID       string // 外键
+
+	UserID string // 外键
 }
