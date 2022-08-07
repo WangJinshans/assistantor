@@ -4,6 +4,7 @@ import (
 	"assistantor/api/login"
 	"assistantor/api/role"
 	"assistantor/api/v1/order"
+	"assistantor/api/v1/stock"
 	"assistantor/api/v1/user"
 	"assistantor/config"
 	_ "assistantor/docs"
@@ -40,7 +41,7 @@ func init() {
 		fmt.Println(err)
 		return
 	}
-	initDatabase()
+	//initDatabase()
 	//initRedis()
 	//initAuth()
 }
@@ -71,7 +72,7 @@ func SyncTables() (err error) {
 		&model.Message{}, &model.MediaResource{},
 		&model.Address{}, &model.DeliveryAddress{},
 		&model.Store{},
-		&model.Stock{},
+		&model.Depository{},
 		&model.Product{}, &model.OrderProduct{},
 		&model.Order{},
 	)
@@ -145,6 +146,15 @@ func StartServer() {
 		orderGroup := v1.Group("order")
 		{
 			orderGroup.POST("/create_order", order.CreateOrder)
+		}
+		stockGroup := v1.Group("stock")
+		{
+			stockGroup.GET("/stock_history", stock.GetStockHistoryInfo)
+			stockGroup.GET("/global_stock", stock.GetGlobalStockInfo)
+			stockGroup.GET("/asia_stock", stock.GetAsiaStockInfo)
+			stockGroup.GET("/amer_stock", stock.GetAmerStockInfo)
+			stockGroup.GET("/europe_stock", stock.GetEuropeStockInfo)
+			stockGroup.GET("/aus_stock", stock.GetAusStockInfo)
 		}
 	}
 	r.Run(":8088")
