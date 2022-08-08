@@ -151,7 +151,9 @@ func StartServer() {
 		}
 		orderGroup := v1.Group("order")
 		{
-			orderGroup.POST("/create_order", order.CreateOrder)
+			orderGroup.PUT("/create_order", order.CreateVipOrder)
+			orderGroup.GET("/query_order", order.QueryOrderStatus)
+			orderGroup.POST("/pay_order", order.PayOrder)
 		}
 		stockGroup := v1.Group("stock")
 		{

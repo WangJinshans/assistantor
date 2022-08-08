@@ -17,3 +17,13 @@ func SetupEngine(e *gorm.DB) {
 func SetupRedisClient(c *redis.Client) {
 	redisClient = c
 }
+
+func GetEngine() (e *gorm.DB) {
+	e = engine
+	return
+}
+
+func GetRedisClient() (c *redis.Client) {
+	c = redisClient
+	return
+}

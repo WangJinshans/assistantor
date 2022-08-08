@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateOrder(ctx *gin.Context) {
+func CreateVipOrder(ctx *gin.Context) {
 
 	var parameter *model.OrderRequest
 	var orderId string
@@ -21,7 +21,7 @@ func CreateOrder(ctx *gin.Context) {
 		return
 	}
 
-	orderId, err = services.CreateOrder(parameter)
+	orderId, err = services.CreateOrder(parameter, common.VipOrderType)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,

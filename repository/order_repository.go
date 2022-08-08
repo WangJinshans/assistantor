@@ -7,6 +7,11 @@ func SaveOrder(order *model.Order) (err error) {
 	return
 }
 
+func SaveProductOrder(info *model.OrderProduct) (err error) {
+	err = engine.Save(info).Error
+	return
+}
+
 func GetOrderById(orderId string) (order *model.Order, err error) {
 	order = new(model.Order)
 	order.OrderID = orderId

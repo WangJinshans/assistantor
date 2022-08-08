@@ -6,3 +6,8 @@ const (
 	OrderCreated = "created"
 	OrderExpired = "expired"
 )
+
+const (
+	RegularOrderType = iota
+	VipOrderType
+)

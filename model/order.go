@@ -14,12 +14,12 @@ type Order struct {
 	AddressID uint
 }
 
-
 type OrderRequest struct {
-	UserId        string `json:"user_id"`
-	OrderId       string `json:"order_id"`
-	ProductIdList struct {
-		ProductId string `json:"product_id"`
-		Count     int64  `json:"count"`
-	} `json:"product_id_list"`
+	UserId      string `json:"user_id"`
+	OrderId     string `json:"order_id"`
+	ProductList []struct {
+		ProductId   string `json:"product_id"`
+		ProductName string `json:"product_name"`
+		Count       int64  `json:"count"`
+	} `json:"product_list"`
 }
