@@ -16,7 +16,7 @@ type User struct {
 	PassWord    string `json:"pass_word"`
 	EmailAddr   string `json:"email_addr"`
 	PhoneNumber string `json:"phone_number"`
-	TimeStamp   int64  `json:"time_stamp"`
-
+	LevelExpire int64  `json:"level_expire"`
+	FirstVip    int    `json:"first_vip"` // 是否首次
 	AddressID   uint
 }

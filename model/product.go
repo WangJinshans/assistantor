@@ -19,7 +19,6 @@ type OrderProduct struct {
 	Description string
 	ProductType int
 	Total       int
-	LeftCount   int
 
 	StockID     uint   `gorm:"index"`
 	OrderID     string `gorm:"index"`

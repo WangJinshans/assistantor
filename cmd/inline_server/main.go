@@ -135,7 +135,13 @@ func StartServer() {
 	{
 		userGroup := v1.Group("user")
 		{
+			//userGroup.Use(middlerware.JwtAuth())        // token
+			//userGroup.Use(middlerware.AuthMiddleWare()) // 权限
 			userGroup.GET("/user_info", user.UserApi.GetUserInfo)
+			userGroup.GET("/upgrade_user", user.UserApi.UpdateUserLevel)
+
+			userGroup.PUT("/add_stock_operation", stock.AddOperationLog)
+			userGroup.GET("/get_stock_operation", stock.GetOperationLog)
 		}
 		roleGroup := v1.Group("role")
 		{
@@ -167,5 +173,4 @@ func main() {
 	ctx := context.Background()
 	go global.StartCleanKey(ctx)
 	StartServer()
-
 }

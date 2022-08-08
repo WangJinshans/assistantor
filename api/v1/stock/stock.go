@@ -3,6 +3,7 @@ package stock
 import (
 	"assistantor/common"
 	"assistantor/model"
+	"assistantor/repository"
 	"assistantor/services"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -30,7 +31,6 @@ func GetStockHistoryInfo(ctx *gin.Context) {
 	return
 }
 
-
 func GetStockMarkInfo(ctx *gin.Context) {
 	dataList, err := services.GetStockMarketInfo()
 	if err != nil || len(dataList) == 0 {
@@ -46,7 +46,6 @@ func GetStockMarkInfo(ctx *gin.Context) {
 	})
 	return
 }
-
 
 func GetGlobalStockInfo(ctx *gin.Context) {
 	var stockList []model.StockShortInfo
@@ -102,7 +101,6 @@ func GetEuropeStockInfo(ctx *gin.Context) {
 	return
 }
 
-
 func GetAmerStockInfo(ctx *gin.Context) {
 	var stockList []model.StockShortInfo
 	var err error
@@ -135,6 +133,57 @@ func GetAusStockInfo(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"code":    common.Fail,
 		"message": stockList,
+	})
+	return
+}
+
+func AddOperationLog(ctx *gin.Context) {
+	var parameter model.StockOperation
+	err := ctx.Bind(&parameter)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = repository.AddOperation(parameter)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"code":    common.Success,
+		"message": "",
+	})
+	return
+}
+
+func GetOperationLog(ctx *gin.Context) {
+	userId := ctx.Query("user_id")
+	if userId == "" {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "",
+		})
+		return
+	}
+
+	operationList, err := repository.GetOperation(userId)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"code":    common.Success,
+		"message": operationList,
 	})
 	return
 }

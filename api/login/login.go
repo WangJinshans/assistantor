@@ -162,7 +162,7 @@ func Register(context *gin.Context) {
 	userId := fmt.Sprintf("user_%d", time.Now().Unix())
 	user.UserId = userId
 	user.PassWord = string(passWord)
-	repository.UserRepos.SaveUser(&user)
+	repository.UserRepos.SaveUserPassword(&user)
 
 	var token string
 	token, err = auth.GenerateToken(userId)

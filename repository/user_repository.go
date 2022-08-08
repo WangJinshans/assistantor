@@ -11,7 +11,7 @@ var UserRepos UserRepository
 type UserRepository struct {
 }
 
-func (u *UserRepository) SaveUser(user *model.User) (err error) {
+func (u *UserRepository) SaveUserPassword(user *model.User) (err error) {
 	hashStr, err := bcrypt.GenerateFromPassword([]byte(user.PassWord), bcrypt.DefaultCost) //加密处理
 	if err != nil {
 		log.Error().Msg(err.Error())
@@ -23,8 +23,14 @@ func (u *UserRepository) SaveUser(user *model.User) (err error) {
 	return
 }
 
-func (u *UserRepository) GetUser(userId string) (user model.User, err error) {
+func (u *UserRepository) GetUser(userId string) (user *model.User, err error) {
+	user = new(model.User)
 	user.UserId = userId
-	engine.First(&user)
+	engine.First(user)
+	return
+}
+
+func (u *UserRepository) UpdateUser(user *model.User) (err error) {
+	err = engine.Save(user).Error
 	return
 }
