@@ -12,6 +12,7 @@ import (
 	"assistantor/middlerware"
 	"assistantor/model"
 	"assistantor/repository"
+	"assistantor/services"
 	"context"
 	"fmt"
 	"github.com/BurntSushi/toml"
@@ -22,9 +23,9 @@ import (
 	"github.com/rs/zerolog/log"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	confluentKafka "gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"time"
 )
 
 // 根目录: swag init -g cmd/inline_server/main.go
@@ -33,6 +34,7 @@ var (
 	conf        config.AssistantConfig
 	engine      *gorm.DB
 	redisClient *redis.Client
+	producer    *confluentKafka.Producer
 )
 
 func init() {
@@ -85,11 +87,16 @@ func initRedis() {
 		Password: conf.Redis.Password,
 		DB:       conf.Redis.DB,
 	})
-	_, err := redisClient.Set("movie_key", "value", time.Second*60).Result()
+	repository.SetupRedisClient(redisClient)
+}
+
+func initKafkaProducer() {
+	var err error
+	producer, err = services.NewKafkaProducer(conf.Kafka.Address)
 	if err != nil {
 		panic(err)
 	}
-	repository.SetupRedisClient(redisClient)
+	services.SetupKafkaProducer(producer)
 }
 
 func initAuth() {
@@ -151,7 +158,7 @@ func StartServer() {
 		}
 		orderGroup := v1.Group("order")
 		{
-			orderGroup.PUT("/create_order", order.CreateVipOrder)
+			orderGroup.PUT("/create_order", order.CreateVipMemberOrder)
 			orderGroup.GET("/query_order", order.QueryOrderStatus)
 			orderGroup.POST("/pay_order", order.PayOrder)
 		}
@@ -173,6 +180,7 @@ func main() {
 	//p, _ := global.GetExecutablePath()
 	//log.Info().Msgf("p is: %s", p)
 	ctx := context.Background()
+	go services.StartDispatchOrder(ctx, &conf.Kafka) // 订单分发
 	go global.StartCleanKey(ctx)
 	StartServer()
 }

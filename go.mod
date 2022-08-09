@@ -31,6 +31,7 @@ require (
 	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
 	golang.org/x/sys v0.0.0-20220727055044-e65921a090b8 // indirect
 	golang.org/x/tools v0.1.11 // indirect
+	gopkg.in/confluentinc/confluent-kafka-go.v1 v1.1.0
 	gorm.io/driver/mysql v1.3.5
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.8

@@ -79,8 +79,17 @@ func (*ApiUser) UpdateUserLevel(ctx *gin.Context) {
 		return
 	}
 
+	var m int
+	m, err = repository.UserRepos.GetUpgradeInfo(parameter.OrderId)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "order not found",
+		})
+		return
+	}
 	if updateType == common.CreateVip {
-		ts := utils.GetNextMonthToDay()
+		ts := utils.GetExpireDate(m) // 过期时间
 		user.LevelExpire = ts
 		user.UserLevel = common.VipLevel
 		if user.FirstVip == common.FirstVip {
