@@ -52,7 +52,7 @@ func (u *UserRepository) GetUpgradeInfo(orderId string) (total int, err error) {
 			return true, err
 		}
 
-		total = int(ov[0].Total)
+		total = int(ov[0].Count)
 		return true, err // try 3 times
 	}
 	if err = try.Do(getFunc); err != nil {

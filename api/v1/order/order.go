@@ -6,6 +6,7 @@ import (
 	"assistantor/repository"
 	"assistantor/services"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 func CreateVipMemberOrder(ctx *gin.Context) {
@@ -24,11 +25,11 @@ func CreateVipMemberOrder(ctx *gin.Context) {
 	// 采用count的方式写入
 	var req model.OrderRequest
 	req.UserId = parameter.UserId
-	req.ProductList = []model.OrderProduct{
+	req.ProductList = []model.StoreProduct{
 		{
 			ProductId:   parameter.ProductId,
 			ProductName: parameter.ProductName,
-			Total:       parameter.Count,
+			Count:       parameter.Count,
 		},
 	}
 
@@ -77,6 +78,34 @@ func CreateRegularOrder(ctx *gin.Context) {
 	})
 
 	return
+}
+
+func CancelOrder(ctx *gin.Context) {
+	// TODO 指定接收user
+	var parameter *model.OrderRequest
+	err := ctx.Bind(parameter)
+	if err != nil {
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "parameter error",
+		})
+		return
+	}
+	orderId := parameter.OrderId
+	err = services.CancelOrder(orderId)
+	if err != nil {
+		log.Info().Msgf("fail to cancel order, error is: %v", err)
+		ctx.JSON(200, gin.H{
+			"code":    common.Fail,
+			"message": "cancel error",
+		})
+		return
+	}
+	log.Info().Msgf("fail to cancel order, error is: %v", err)
+	ctx.JSON(200, gin.H{
+		"code":    common.Success,
+		"message": "",
+	})
 }
 
 func QueryOrderStatus(ctx *gin.Context) {

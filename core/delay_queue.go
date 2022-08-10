@@ -1,8 +1,10 @@
 package core
 
 import (
+	"assistantor/common"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/rs/zerolog/log"
@@ -19,6 +21,7 @@ type DelayQueue struct {
 	BatchMode  bool // 异步批量  同步此参数无意义
 	AsyncQueue chan Message
 	Client     *redis.Client
+	Name       string // redis key
 }
 
 type Message struct {
@@ -34,20 +37,25 @@ type Config struct {
 	DB        int
 }
 
-func NewDelayQueue(conf *Config) *DelayQueue {
+func NewDelayQueue(conf *Config, name string) (*DelayQueue, error) {
 	// 连接redis
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     conf.Address,
 		Password: conf.Password,
 		DB:       conf.DB,
 	})
+	ok, err := redisClient.Exists(name).Result()
+	if err != nil {
+		return nil, err
+	}
+	if ok == 1 {
+		err = errors.New(common.ExistError)
+		return nil, err
+	}
 	queue := new(DelayQueue)
 	queue.Client = redisClient
-	return queue
-}
-
-func (queue *DelayQueue) OnProduce(messageId string, err error) {
-
+	queue.Name = name
+	return queue, nil
 }
 
 func (queue *DelayQueue) ProduceMessage(msg Message, expireTimeStamp int64) (err error) {
@@ -68,7 +76,7 @@ func (queue *DelayQueue) SyncPushMessage(message Message) {
 
 }
 
-func (queue *DelayQueue) ConsumeMessage(ctx context.Context) {
+func (queue *DelayQueue) ConsumeMessage(ctx context.Context, fn func(m Message)) {
 
 	ticker := time.NewTicker(time.Second * 1)
 	for {
@@ -94,6 +102,8 @@ func (queue *DelayQueue) ConsumeMessage(ctx context.Context) {
 					_, err = queue.Client.ZRem(DelayQueueKey, result).Result()
 					if err != nil {
 						log.Info().Msgf("fail to rem member: %s, error is: %v", result, err)
+					} else {
+						fn(message)
 					}
 				}
 			}

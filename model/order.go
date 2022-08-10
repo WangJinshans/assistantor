@@ -12,6 +12,7 @@ type Order struct {
 	UserID    string
 	AddressID uint
 	PaymentID string // 支付信息
+	StoreId   string // 商家
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -27,16 +28,17 @@ type OrderDispatch struct {
 type OrderVipMemberRequest struct {
 	UserId      string `json:"user_id"`
 	OrderId     string `json:"order_id"`
-	ProductId   int    `json:"product_id"`
+	ProductId   string `json:"product_id"`
 	ProductName string `json:"product_name"`
 	Count       int64  `json:"count"`
 }
 
 type OrderRequest struct {
-	UserId      string         `json:"user_id"`
+	UserId      string         `json:"user_id"` // 付款方
 	OrderId     string         `json:"order_id"`
-	UserInfo    User           `json:"-"` // 接收方
-	ProductList []OrderProduct `json:"product_list"`
+	StoreId     string         `json:"store_id"`  // 销售方
+	UserInfo    User           `json:"user_info"` // 收货方  代买情况
+	ProductList []StoreProduct `json:"product_list"`
 }
 
 type OrderView struct {

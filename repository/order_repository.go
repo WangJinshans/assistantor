@@ -21,6 +21,7 @@ func GetOrderById(orderId string) (order *model.Order, err error) {
 	return
 }
 
+// todo 待调整
 func GetOrderProducts(orderId string) (ov []model.OrderView, err error) {
 	tx := engine.Table("order_product")
 	tx = tx.Select("order_product.product_name,order_product.product_id,order_product.product_type, order_product.product_description, order.order_status")

@@ -89,7 +89,7 @@ func (*ApiUser) UpdateUserLevel(ctx *gin.Context) {
 		return
 	}
 	if updateType == common.CreateVip {
-		ts := utils.GetExpireDate(m) // 过期时间
+		ts := utils.GetExpireTimeStamp(0, m, 0, 0, 0, 0) // 过期时间
 		user.LevelExpire = ts
 		user.UserLevel = common.VipLevel
 		if user.FirstVip == common.FirstVip {

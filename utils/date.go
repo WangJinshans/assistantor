@@ -21,11 +21,28 @@ func GetNextMonthToDay() (ts int64) {
 	return
 }
 
-func GetExpireDate(m int) (ts int64) {
-	var date time.Time
-	year, month, day := time.Now().Date()
-	date = time.Date(year, month+time.Month(m), day, 0, 0, 0, 0, time.Local)
+func GetExpireDate(y, mon, d, h, min, s int) (date time.Time) {
+	now := time.Now()
+	year, month, day := now.Date()
+	hour := now.Hour()
+	minute := now.Minute()
+	second := now.Second()
+	date = time.Date(year+y, month+time.Month(mon), day+d, hour+h, minute+min, second+s, 0, time.Local)
+	return
+}
+
+func GetExpireTimeStamp(y, mon, d, h, min, s int) (ts int64) {
+	date := GetExpireDate(y, mon, d, h, min, s)
 	ts = date.Unix()
-	log.Info().Msgf("next month today is: %s", date.Format(DEFAULT_FORMAT))
+	return
+}
+
+func GetExpireTimeString(y, mon, d, h, min, s int, format string) (timeString string) {
+	date := GetExpireDate(y, mon, d, h, min, s)
+	if format != "" {
+		timeString = date.Format(format)
+	} else {
+		timeString = date.Format(DEFAULT_FORMAT)
+	}
 	return
 }

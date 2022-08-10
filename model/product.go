@@ -5,29 +5,49 @@ import (
 )
 
 type Product struct {
-	ProductId   int `gorm:"primarykey"`
-	ProductName string
-	Description string
-	ProductType int
-	Total       int64
-	LeftCount   int64
-	Price       int64 // 指导价
+	ProductId    string `gorm:"primarykey"`
+	ProductName  string
+	Description  string
+	ProductType  int
+	Total        int64
+	LeftCount    int64
+	LockCount    int64 // 临时锁定(未支付)
+	DefaultPrice int64 // 指导价
+	Price        int64
 
-	StockID   uint
+	StockID   uint   // 仓库
+	StoreID   string // 店
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-type OrderProduct struct {
-	ProductId   int `gorm:"primarykey"`
+// product 为总库  每个店家自己复制一份
+type StoreProduct struct {
+	ProductId   string `gorm:"primarykey"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	ProductName string
 	Description string
 	ProductType int
-	Total       int64 // 一件商品多份
+	Count       int64 // 一件商品多份
 	Price       int64 // 每个订单的价格允许不一样
 
-	StockID uint   `gorm:"index"`
+	StoreID string
 	OrderID string `gorm:"index"`
+}
+
+// 商品订单
+type OrderProduct struct {
+	ProductId   string `gorm:"primarykey"`
+	ProductName string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Count int64 // 一件商品多份
+	Price int64 // 每个订单的价格允许不一样
+
+	StoreId string
+	OrderId string
+	UserId  string
 }

@@ -159,6 +159,7 @@ func StartServer() {
 		orderGroup := v1.Group("order")
 		{
 			orderGroup.PUT("/create_order", order.CreateVipMemberOrder)
+			orderGroup.PUT("/create_member_order", order.CreateRegularOrder)
 			orderGroup.GET("/query_order", order.QueryOrderStatus)
 			orderGroup.POST("/pay_order", order.PayOrder)
 		}
@@ -177,10 +178,9 @@ func StartServer() {
 
 func main() {
 
-	//p, _ := global.GetExecutablePath()
-	//log.Info().Msgf("p is: %s", p)
 	ctx := context.Background()
-	go services.StartDispatchOrder(ctx, &conf.Kafka) // 订单分发
+	go services.StartDispatchOrder(ctx, &conf.Kafka)  // 订单分发
+	go services.OrderTimeoutMonitor(ctx, &conf.Redis) // 订单超时
 	go global.StartCleanKey(ctx)
 	StartServer()
 }

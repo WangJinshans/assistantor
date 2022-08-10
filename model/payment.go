@@ -7,7 +7,7 @@ import (
 // 支付信息
 type Payment struct {
 	PaymentID string `gorm:"primarykey"`
-	Status    int
+	Status    string
 	Price     int64
 	UserId    string
 	To        string
