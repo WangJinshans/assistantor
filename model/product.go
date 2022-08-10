@@ -4,24 +4,7 @@ import (
 	"time"
 )
 
-type Product struct {
-	ProductId    string `gorm:"primarykey"`
-	ProductName  string
-	Description  string
-	ProductType  int
-	Total        int64
-	LeftCount    int64
-	LockCount    int64 // 临时锁定(未支付)
-	DefaultPrice int64 // 指导价
-	Price        int64
 
-	StockID   uint   // 仓库
-	StoreID   string // 店
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-// product 为总库  每个店家自己复制一份
 type StoreProduct struct {
 	ProductId    string `gorm:"primarykey"`
 	CreatedAt    time.Time

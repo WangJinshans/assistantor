@@ -75,7 +75,7 @@ func SyncTables() (err error) {
 		&model.Address{}, &model.DeliveryAddress{},
 		&model.Store{},
 		&model.Depository{},
-		&model.Product{}, &model.OrderProduct{},
+		&model.StoreProduct{}, &model.OrderProduct{},
 		&model.Order{},
 	)
 	return
