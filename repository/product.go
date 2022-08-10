@@ -16,11 +16,11 @@ func LockCount(productId string, storeId string, count int64) (err error) {
 		return
 	}
 	product.LockCount += count
-	err = SaveProduct(product)
+	err = SaveStoreProduct(product)
 	return
 }
 
-func GetProductById(productId string, storeId string) (product model.Product, err error) {
+func GetProductById(productId string, storeId string) (product model.StoreProduct, err error) {
 	err = engine.Model(&model.Product{}).Where("product_id = ? and store_id = ?", productId, storeId).Find(&product).Error
 	return
 }
@@ -31,6 +31,11 @@ func GetProductsByOrderId(orderId string) (product []model.StoreProduct, err err
 }
 
 func SaveProduct(product model.Product) (err error) {
+	err = engine.Save(&product).Error
+	return
+}
+
+func SaveStoreProduct(product model.StoreProduct) (err error) {
 	err = engine.Save(&product).Error
 	return
 }

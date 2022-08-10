@@ -21,11 +21,7 @@ func GetOrderById(orderId string) (order *model.Order, err error) {
 	return
 }
 
-// todo 待调整
-func GetOrderProducts(orderId string) (ov []model.OrderView, err error) {
-	tx := engine.Table("order_product")
-	tx = tx.Select("order_product.product_name,order_product.product_id,order_product.product_type, order_product.product_description, order.order_status")
-	tx = tx.Joins("left join order on order_product.order_id=order.order_id")
-	err = tx.Where("product_order.order_id = ?", orderId).Find(&ov).Error
+func GetOrderProducts(orderId string) (productList []model.OrderProduct, err error) {
+	err = engine.Model(&model.OrderProduct{}).Where("order_id = ?", orderId).Find(productList).Error
 	return
 }

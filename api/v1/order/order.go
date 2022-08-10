@@ -82,8 +82,8 @@ func CreateRegularOrder(ctx *gin.Context) {
 
 func CancelOrder(ctx *gin.Context) {
 	// TODO 指定接收user
-	var parameter *model.OrderRequest
-	err := ctx.Bind(parameter)
+	var parameter model.OrderRequest
+	err := ctx.Bind(&parameter)
 	if err != nil {
 		ctx.JSON(200, gin.H{
 			"code":    common.Fail,
@@ -92,7 +92,8 @@ func CancelOrder(ctx *gin.Context) {
 		return
 	}
 	orderId := parameter.OrderId
-	err = services.CancelOrder(orderId)
+	userId := parameter.UserId
+	err = services.CancelOrder(orderId, userId)
 	if err != nil {
 		log.Info().Msgf("fail to cancel order, error is: %v", err)
 		ctx.JSON(200, gin.H{

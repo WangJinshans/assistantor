@@ -7,4 +7,6 @@ const (
 	CountExceedError = "out of stock"
 
 	OrderTypeError = "invalid order type"
+	OrderUserError = "user order not matched"
+
 )

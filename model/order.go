@@ -34,11 +34,11 @@ type OrderVipMemberRequest struct {
 }
 
 type OrderRequest struct {
-	UserId      string         `json:"user_id"` // 付款方
-	OrderId     string         `json:"order_id"`
-	StoreId     string         `json:"store_id"`  // 销售方
-	UserInfo    User           `json:"user_info"` // 收货方  代买情况
-	ProductList []StoreProduct `json:"product_list"`
+	UserId       string         `json:"user_id"` // 付款方
+	OrderId      string         `json:"order_id"`
+	StoreId      string         `json:"store_id"`       // 销售方
+	AcceptUserId string         `json:"accept_user_id"` // 收货方  代买情况
+	ProductList  []StoreProduct `json:"product_list"`
 }
 
 type OrderView struct {
