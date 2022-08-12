@@ -1,0 +1,31 @@
+syntax = "proto3";
+package delivery;
+option go_package = "./delivery;delivery";
+
+message QueryDeliverParameter {
+  string order_id = 1;
+}
+
+message DeliverInfo {
+  float  location_lat = 2;
+  float  location_lng = 3;
+  string address = 4;
+  string deliver_guy_id = 5; // 骑手
+  string deliver_guy_number = 6;
+}
+
+// 结果
+message DeliveryResult {
+  string order_id = 1;
+  string user_id = 2;
+  string user_phone_number = 3;
+  string delivery_address = 4;
+  repeated DeliverInfo delivery_list = 5;
+}
+message Empty {
+
+}
+
+service Query {
+  rpc QueryDeliveryInfo (QueryDeliverParameter) returns (DeliveryResult) {}
+}

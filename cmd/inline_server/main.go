@@ -4,6 +4,7 @@ import (
 	"assistantor/api/login"
 	"assistantor/api/role"
 	"assistantor/api/v1/order"
+	"assistantor/api/v1/product"
 	"assistantor/api/v1/stock"
 	"assistantor/api/v1/user"
 	"assistantor/config"
@@ -162,6 +163,14 @@ func StartServer() {
 			orderGroup.PUT("/create_member_order", order.CreateRegularOrder)
 			orderGroup.GET("/query_order", order.QueryOrderStatus)
 			orderGroup.POST("/pay_order", order.PayOrder)
+		}
+		productGroup := v1.Group("product")
+		{
+			productGroup.GET("/product_list", product.GetStoreProductList)
+			productGroup.GET("/product_info", product.GetStoreProductByProductId)
+			productGroup.POST("/update_product", product.UpdateStoreProduct)
+			productGroup.PUT("/add_product", product.AddStoreProduct)
+			productGroup.DELETE("/delete_product", product.DeleteStoreProduct)
 		}
 		stockGroup := v1.Group("stock")
 		{

@@ -6,6 +6,11 @@ func GetStoreProductList(ctx *gin.Context) {
 
 }
 
+// 单个商品信息
+func GetStoreProductByProductId(ctx *gin.Context) {
+
+}
+
 func AddStoreProduct(ctx *gin.Context) {
 
 }
