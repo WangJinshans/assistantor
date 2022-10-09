@@ -193,7 +193,6 @@ func StartServer() {
 }
 
 func main() {
-
 	ctx := context.Background()
 	go services.StartDispatchOrder(ctx, &conf.Kafka)  // 订单分发
 	go services.OrderTimeoutMonitor(ctx, &conf.Redis) // 订单超时
