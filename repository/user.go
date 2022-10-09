@@ -40,7 +40,7 @@ func (u *UserRepository) UpdateUser(user *model.User) (err error) {
 
 func (u *UserRepository) GetUpgradeInfo(orderId string) (total int, err error) {
 
-	var ov []model.OrderView
+	var ov []model.OrderProduct
 	getFunc := func(attempt int) (bool, error) {
 		ov, err = GetOrderProducts(orderId)
 		if err != nil {

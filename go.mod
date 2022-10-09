@@ -4,13 +4,17 @@ go 1.16
 
 require (
 	github.com/BurntSushi/toml v1.2.0
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
+	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
 	github.com/casbin/casbin/v2 v2.51.2
 	github.com/casbin/gorm-adapter/v3 v3.7.4
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gin-gonic/gin v1.8.1
+	github.com/go-echarts/go-echarts v1.0.0
+	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-openapi/spec v0.20.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
@@ -28,6 +32,7 @@ require (
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe
 	github.com/swaggo/gin-swagger v1.5.1
 	github.com/swaggo/swag v1.8.4
+	github.com/tidwall/gjson v1.14.3
 	github.com/unrolled/secure v1.12.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect

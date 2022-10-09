@@ -59,7 +59,6 @@ func GetPublicKey(c *gin.Context) {
 // @Success 200 {object} LoginResponse
 // @Router /login [get]
 func Login(context *gin.Context) {
-
 	var user model.User
 	err := context.BindJSON(&user)
 	if err != nil {

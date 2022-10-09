@@ -3,6 +3,7 @@ package main
 import (
 	"assistantor/api/login"
 	"assistantor/api/role"
+	"assistantor/api/v1/cart"
 	"assistantor/api/v1/order"
 	"assistantor/api/v1/product"
 	"assistantor/api/v1/stock"
@@ -76,7 +77,7 @@ func SyncTables() (err error) {
 		&model.Address{}, &model.DeliveryAddress{},
 		&model.Store{},
 		&model.Depository{},
-		&model.StoreProduct{}, &model.OrderProduct{},
+		&model.StoreProduct{}, &model.OrderProduct{}, &model.CartProduct{},
 		&model.Order{},
 	)
 	return
@@ -125,7 +126,7 @@ func StartServer() {
 	r := gin.New()
 	r.Use(middlerware.Cors())
 	r.Use(gin.Recovery())
-
+	r.Static("/static", "../../static/")
 	r.GET("/get_public_key", login.GetPublicKey)
 	r.POST("/login", login.Login)
 	r.POST("/logout", login.Logout)
@@ -157,6 +158,11 @@ func StartServer() {
 			roleGroup.DELETE("/delete_role", role.RoleApi.DeleteRole)
 			roleGroup.PUT("/add_user_role", role.RoleApi.AddRoleForUser)
 		}
+		cartGroup := v1.Group("role")
+		{
+			cartGroup.GET("/cart_info", cart.GetCartProductList)
+			cartGroup.DELETE("/delete_cart", cart.DeleteCartProduct)
+		}
 		orderGroup := v1.Group("order")
 		{
 			orderGroup.PUT("/create_order", order.CreateVipMemberOrder)
@@ -182,6 +188,7 @@ func StartServer() {
 			stockGroup.GET("/aus_stock", stock.GetAusStockInfo)
 		}
 	}
+
 	r.Run(":8088")
 }
 
