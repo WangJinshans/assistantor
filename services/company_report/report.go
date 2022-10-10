@@ -1,438 +1,575 @@
 package company_report
 
 import (
+	"assistantor/global"
+	"assistantor/model/economy"
 	"assistantor/utils"
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
+	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/rs/zerolog/log"
-	"github.com/tidwall/gjson"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
+	"io"
+	"os"
+	"path/filepath"
 )
 
-// 半年报
-func GetLastReport(stockId string, reportType int) {
-	webUrl := "http://vip.stock.finance.sina.com.cn/corp/go.php/vCB_Bulletin/stockid/002156/page_type/zqbg.phtml"
-	header := make(map[string]string)
-	header["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
-	header["Accept-Encoding"] = "deflate"
-	header["Accept-Language"] = "zh-CN,zh;q=0.9"
-	header["Cache-Control"] = "no-cache"
-	header["Host"] = "vip.stock.finance.sina.com.cn"
-	header["Pragma"] = "no-cache"
-	header["Proxy-Connection"] = "keep-alive"
-	header["Upgrade-Insecure-Requests"] = "1"
-	header["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
-
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("fail to create request, error is: %v", err)
-		return
+// 报告期相关
+func getCashFlowReportDateList(dataList []economy.CashFlowInfo) (dateList []opts.BarData) {
+	for _, item := range dataList {
+		date := item.ReportDate
+		dateList = append(dateList, opts.BarData{
+			Value: date,
+		})
 	}
-	for k, v := range header {
-		req.Header.Add(k, v)
-	}
-
-	client := http.Client{
-		Timeout: 60 * time.Second,
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("fail to get message, error is: %v", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	contentType := resp.Header.Get("Content-Type")
-	var bs []byte
-	bs, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("fail to get content, error is: %v", err)
-		return
-	}
-	var content string
-	if strings.Contains(contentType, "gbk") {
-		content = utils.ConvertToString(string(bs), "gbk", "utf-8")
-	} else {
-		content = string(bs)
-	}
-
-	log.Info().Msgf("content is: %s", content)
-	GetLastZQReport(content)
+	return
 }
 
-// 当前第一份报告
-func GetLastZQReport(content string) {
-	dom, err := goquery.NewDocumentFromReader(strings.NewReader(content))
-	if err != nil {
-		log.Error().Msgf("message decode error, error is: %v", err)
-		return
+func getProfitReportDateList(dataList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range dataList {
+		date := item.ReportDate
+		dateList = append(dateList, opts.BarData{
+			Value: date,
+		})
 	}
-	selection := dom.Find(".datelist").Find("ul").Find("a").First()
-	webUrl, ok := selection.Attr("href")
-	if ok {
-		log.Info().Msgf("str is: %s", fmt.Sprintf("http://vip.stock.finance.sina.com.cn%s", webUrl))
-	}
+	return
 }
 
-// 主要指标
-func GetMainPerformanceIndexReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
+func getAssetReportDateList(dataList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range dataList {
+		date := item.ReportDate
+		dateList = append(dateList, opts.BarData{
+			Value: date,
+		})
 	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
-
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/ZYZBAjaxNew?type=0&code=%s", stockId)
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
-		return
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
-		return
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	value := gjson.Get(string(content), "data")
-	if !gjson.Valid(string(content)) {
-		log.Error().Msg("invalid json")
-		return
-	}
-	for _, item := range value.Array() {
-		espBase := item.Get("EPSJB").Float()                       // 基本每股收益
-		totalIncome := item.Get("TOTALOPERATEREVE").Float()        // 营业总收入
-		totalIncomeTb := item.Get("TOTALOPERATEREVETZ").Float()    // 营业总收入同比
-		parentJingLiRun := item.Get("PARENTNETPROFIT").Float()     // 归母净利润
-		parentJingLiRunTb := item.Get("PARENTNETPROFITTZ").Float() // 归母净利润同比
-		kfJingLiRun := item.Get("KCFJCXSYJLR").Float()             // 扣非净利润
-		kfJingLiRunTb := item.Get("KCFJCXSYJLRTZ").Float()         // 扣非净利润同比
-		totolIncomeHb := item.Get("YYZSRGDHBZC").Float()           // 营业总收入环比
-		parentJingLiRunHb := item.Get("NETPROFITRPHBZC").Float()   // 归母净利润环比
-		kfJingLiRunHb := item.Get("KFJLRGDHBZC").Float()           // 扣非净利润环比
-		roe := item.Get("ROEJQ").Float()                           // 净资产收益率
-		maoLi := item.Get("XSMLL").Float()                         // 毛利率
-		jingLi := item.Get("XSJLL").Float()                        // 净利率
-		debtRate := item.Get("ZCFZL").Float()                      // 资产负债率
-		ZZCZZTS := item.Get("ZZCZZTS").Float()                     // 总资产周转天数(天)
-		CHZZTS := item.Get("CHZZTS").Float()                       // 存货周转天数(天)
-		YSZKZZTS := item.Get("YSZKZZTS").Float()                   // 应收账款周转率(天)
-		TOAZZL := item.Get("TOAZZL").Float()                       // 总资产周转率(次)
-		CHZZL := item.Get("CHZZL").Float()                         // 存货周转率(次)
-		YSZKZZL := item.Get("YSZKZZL").Float()                     // 应收账款周转率(次)
-
-		log.Info().Msgf("基本每股收益: %.3f", espBase)
-		log.Info().Msgf("营业总收入: %.3f", totalIncome)
-		log.Info().Msgf("营业总收入同比: %.3f", totalIncomeTb)
-		log.Info().Msgf("归母净利润: %.3f", parentJingLiRun)
-		log.Info().Msgf("归母净利润同比: %.3f", parentJingLiRunTb)
-		log.Info().Msgf("扣非净利润: %.3f", kfJingLiRun)
-		log.Info().Msgf("扣非净利润同比: %.3f", kfJingLiRunTb)
-		log.Info().Msgf("营业总收入环比: %.3f", totolIncomeHb)
-		log.Info().Msgf("归母净利润环比: %.3f", parentJingLiRunHb)
-		log.Info().Msgf("扣非净利润环比: %.3f", kfJingLiRunHb)
-		log.Info().Msgf("净资产收益率: %.3f", roe)
-		log.Info().Msgf("毛利率: %.3f", maoLi)
-		log.Info().Msgf("净利率: %.3f", jingLi)
-		log.Info().Msgf("资产负债率: %.3f", debtRate)
-		log.Info().Msgf("总资产周转天数(天): %.3f", ZZCZZTS)
-		log.Info().Msgf("存货周转天数(天): %.3f", CHZZTS)
-		log.Info().Msgf("应收账款周转率(天): %.3f", YSZKZZTS)
-		log.Info().Msgf("总资产周转率(次): %.3f", TOAZZL)
-		log.Info().Msgf("存货周转率(次): %.3f", CHZZL)
-		log.Info().Msgf("应收账款周转率(次): %.3f", YSZKZZL)
-		log.Info().Msgf("===============================================================")
-	}
+	return
 }
 
-// 杜邦分析
-func GetDuBangAnalyseReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
+// 现金流量相关
+func getSalesList(infoList []economy.CashFlowInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Sales, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
 	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
-
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/DBFXAjaxNew?code=%s", stockId)
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
-		return
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
-		return
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	//log.Info().Msgf("content is: %s", string(content))
-	value := gjson.Get(string(content), "bgq.0")
-	if !gjson.Valid(string(content)) {
-		log.Error().Msg("invalid json")
-		return
-	}
-	fmt.Println(value.String())
+	return
 }
 
-// 资产负债分析
-func GetAssetsLiabilityReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
+func getOperateList(infoList []economy.CashFlowInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Operate, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
 	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
-
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/zcfzbDateAjaxNew?companyType=4&reportDateType=0&code=%s", stockId)
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
-		return
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
-		return
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	value := gjson.Get(string(content), "data")
-	for _, item := range value.Array() {
-		MONETARYFUNDS := item.Get("MONETARYFUNDS").Float()               // 货币资金
-		NOTE_ACCOUNTS_RECE := item.Get("NOTE_ACCOUNTS_RECE").Float()     // 应收账款
-		PREPAYMENT := item.Get("PREPAYMENT").Float()                     // 预收款
-		INVENTORY := item.Get("INVENTORY").Float()                       // 存货
-		FIXED_ASSET := item.Get("FIXED_ASSET").Float()                   // 固定资产
-		CIP := item.Get("CIP").Float()                                   // 在建工程
-		STAFF_SALARY_PAYABLE := item.Get("STAFF_SALARY_PAYABLE").Float() // 员工薪酬
-		UNASSIGN_RPOFIT := item.Get("UNASSIGN_RPOFIT").Float()           // 未分配利润
-
-		log.Info().Msgf("货币资金: %.3f", MONETARYFUNDS)
-		log.Info().Msgf("应收账款: %.3f", NOTE_ACCOUNTS_RECE)
-		log.Info().Msgf("预收款: %.3f", PREPAYMENT)
-		log.Info().Msgf("存货: %.3f", INVENTORY)
-		log.Info().Msgf("固定资产: %.3f", FIXED_ASSET)
-		log.Info().Msgf("在建工程: %.3f", CIP)
-		log.Info().Msgf("员工薪酬: %.3f", STAFF_SALARY_PAYABLE)
-		log.Info().Msgf("未分配利润: %.3f", UNASSIGN_RPOFIT)
-		log.Info().Msgf("===============================================================")
-	}
+	return
 }
 
-// 利润分析
-func GetProfitReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
+func getInvestList(infoList []economy.CashFlowInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Sales, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
 	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
-
-	//webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/lrbDateAjaxNew?companyType=4&reportDateType=0&code=%s", stockId)
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/lrbAjaxNew?companyType=4&reportDateType=0&reportType=1&dates=2022-06-30,2022-03-31,2021-12-31,2021-09-30,2021-06-30&code=%s", stockId)
-
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
-		return
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
-		return
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	value := gjson.Get(string(content), "data")
-	for _, item := range value.Array() {
-		TOTAL_OPERATE_INCOME := item.Get("TOTAL_OPERATE_INCOME").Float() // 营业收入
-		TOTAL_OPERATE_COST := item.Get("TOTAL_OPERATE_COST").Float()     // 营业总成本
-		OPERATE_COST := item.Get("OPERATE_COST").Float()                 // 营业成本
-		OPERATE_TAX_ADD := item.Get("OPERATE_TAX_ADD").Float()           // 税金及附加
-		SALE_EXPENSE := item.Get("SALE_EXPENSE").Float()                 // 销售费用
-		MANAGE_EXPENSE := item.Get("MANAGE_EXPENSE").Float()             // 管理费用
-		RESEARCH_EXPENSE := item.Get("RESEARCH_EXPENSE").Float()         // 研发费用
-		FINANCE_EXPENSE := item.Get("FINANCE_EXPENSE").Float()           // 财务费用
-		INVEST_JOINT_INCOME := item.Get("INVEST_JOINT_INCOME").Float()   // 投资收益
-
-		log.Info().Msgf("营业收入: %.3f", TOTAL_OPERATE_INCOME)
-		log.Info().Msgf("营业总成本: %.3f", TOTAL_OPERATE_COST)
-		log.Info().Msgf("营业成本: %.3f", OPERATE_COST)
-		log.Info().Msgf("税金及附加: %.3f", OPERATE_TAX_ADD)
-		log.Info().Msgf("销售费用: %.3f", SALE_EXPENSE)
-		log.Info().Msgf("管理费用: %.3f", MANAGE_EXPENSE)
-		log.Info().Msgf("研发费用: %.3f", RESEARCH_EXPENSE)
-		log.Info().Msgf("财务费用: %.3f", FINANCE_EXPENSE)
-		log.Info().Msgf("投资收益: %.3f", INVEST_JOINT_INCOME)
-		log.Info().Msgf("===============================================================")
-	}
-
+	return
 }
 
-// 现金流量表
-func GetCashFlowReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
+func getFinanceList(infoList []economy.CashFlowInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Sales, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
 	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
-
-	//webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/xjllbDateAjaxNew?companyType=4&reportDateType=0&code=%s", stockId)
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/xjllbAjaxNew?companyType=4&reportDateType=0&reportType=1&dates=2022-06-30,2022-03-31,2021-12-31,2021-09-30,2021-06-30&code=%s", stockId)
-
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
-	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
-		return
-	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
-		return
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
-		return
-	}
-	resp.Body.Close()
-
-	value := gjson.Get(string(content), "data")
-	for _, item := range value.Array() {
-		SALES_SERVICES := item.Get("SALES_SERVICES").Float()   // 销售商品提供劳务收到的现金
-		NETCASH_OPERATE := item.Get("NETCASH_OPERATE").Float() // 经营活动产生的现金流量净额
-		NETCASH_INVEST := item.Get("NETCASH_INVEST").Float()   // 投资活动产生的现金流量净额
-		NETCASH_FINANCE := item.Get("NETCASH_FINANCE").Float() // 投资活动产生的现金流量净额
-
-		log.Info().Msgf("销售商品提供劳务收到的现金: %.3f", SALES_SERVICES)
-		log.Info().Msgf("经营活动产生的现金流量净额: %.3f", NETCASH_OPERATE)
-		log.Info().Msgf("投资活动产生的现金流量净额: %.3f", NETCASH_INVEST)
-		log.Info().Msgf("投资活动产生的现金流量净额: %.3f", NETCASH_FINANCE)
-		log.Info().Msgf("===============================================================")
-	}
-
+	return
 }
 
-func GetPercentReport(stockId string) {
-	stockId = "SZ002156"
-	client := http.Client{
-		Timeout: 60 * time.Second,
-	}
-	var headers = map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "zh-CN,zh;q=0.9",
-		"Host":            "emweb.securities.eastmoney.com",
-		"Referer":         fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=%s", strings.ToLower(stockId)),
-		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-	}
+//func getRequestDataList(dataList interface{}, attributes string) (dataSet []interface{}) {
+//
+//	switch infoList := dataList.(type) {
+//	case []economy.ProfitInfo:
+//		for _, info := range infoList {
+//			t := reflect.TypeOf(info)
+//			v := reflect.ValueOf(info)
+//			for i := 0; i < t.NumField(); i++ {
+//				fieldName := t.Field(i).Name
+//				position := t.Field(i).Tag.Get("position")
+//				if position == "x" {
+//					data := v.Field(i).String()
+//					dataSet = append(dataSet, data)
+//					continue
+//				}
+//				if fieldName == attributes {
+//					data, _ := utils.ShowNumberFriendly(v.Field(i).Float())
+//					dataSet = append(dataSet, data)
+//				}
+//			}
+//		}
+//	}
+//	return
+//}
+//
+//func getBarDataList(dataList interface{}, attributes string) (dateList []opts.BarData) {
+//	dataSet := getRequestDataList(dataList, attributes)
+//	for _, data := range dataSet {
+//		dateList = append(dateList, opts.BarData{
+//			Value: data,
+//			Label: &opts.Label{
+//				Show:      true,
+//				Formatter: "{a}: {c}",
+//			},
+//		})
+//	}
+//	return
+//}
 
-	webUrl := fmt.Sprintf("http://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/bfbbbAjaxNew?code=SZ002156&ctype=4&type=0&code=%s", stockId)
-	req, err := http.NewRequest(http.MethodGet, webUrl, nil)
+// 利润表相关
+func getTotalOperateIncomeList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.TotalOperateIncome, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getTotalOperateCostList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.TotalOperateCost, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getOperateCostList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.OperateCost, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getOperateTaxList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		//data, _ := utils.ShowNumberFriendly(item.OperateTax)
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.OperateTax, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getSaleExpenseList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.SaleExpense, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getManageExpenseList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.ManageExpense, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getResearchExpenseList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.ResearchExpense, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getFinanceExpenseList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.FinanceExpense, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getInvestJointIncomeList(infoList []economy.ProfitInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.InvestJointIncome, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+// 资产负债相关
+func getMonetaryFundList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.MonetaryFunds, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getNoteAccountsReceiveList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.NoteAccountsReceive, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getPrepaymentList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Prepayment, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getInventoryList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Inventory, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getFixedAssetList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.FixedAsset, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getCipList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.Cip, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getStaffSalaryPayableList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.StaffSalaryPayable, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+func getUnAssignProfitList(infoList []economy.AssetInfo) (dateList []opts.BarData) {
+	for _, item := range infoList {
+		data := utils.ShowNumberFriendlyNumberWithUnit(item.UnAssignProfit, 1)
+		dateList = append(dateList, opts.BarData{
+			Value: data,
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{c}",
+			},
+		})
+	}
+	return
+}
+
+// 报告
+func GenerateProfitReport(stockId string) {
+
+	infoList := GetProfitReport(stockId)
+	reportDateItems := getProfitReportDateList(infoList)
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "Bar 示例图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+
+	bar.SetXAxis(reportDateItems).
+		AddSeries("营业收入", getTotalOperateIncomeList(infoList)).
+		AddSeries("营业总成本", getTotalOperateCostList(infoList)).
+		AddSeries("营业成本", getOperateCostList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	bar1 := charts.NewBar()
+	bar1.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "Bar 示例图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+
+	bar1.SetXAxis(reportDateItems).
+		AddSeries("税金及附加", getOperateTaxList(infoList)).
+		AddSeries("销售费用", getSaleExpenseList(infoList)).
+		AddSeries("管理费用", getManageExpenseList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	bar2 := charts.NewBar()
+	bar2.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "Bar 示例图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+
+	bar2.SetXAxis(reportDateItems).
+		AddSeries("研发费用", getResearchExpenseList(infoList)).
+		AddSeries("财务费用", getFinanceExpenseList(infoList)).
+		AddSeries("投资收益", getInvestJointIncomeList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	page := components.NewPage()
+	page.SetLayout(components.PageFlexLayout)
+	page.AddCharts(
+		bar,
+		bar1,
+		bar2,
+	)
+
+	reportPath, _ := global.GetReportPath()
+	fileName := filepath.Join(reportPath, "profit.html")
+	f, err := os.Create(fileName)
 	if err != nil {
-		log.Error().Msgf("create req error: %v", err)
+		log.Error().Msgf("fail to create file, error is: %v", err)
 		return
 	}
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
+	page.Render(io.MultiWriter(f))
+}
 
-	resp, err := client.Do(req)
+func GenerateAssetsLiabilityReport(stockId string) {
+	infoList := GetAssetsLiabilityReport(stockId)
+	reportDateItems := getAssetReportDateList(infoList)
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "Bar 示例图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+
+	bar.SetXAxis(reportDateItems).
+		AddSeries("货币资金", getMonetaryFundList(infoList)).
+		AddSeries("应收账款", getNoteAccountsReceiveList(infoList)).
+		AddSeries("预收款", getPrepaymentList(infoList)).
+		AddSeries("存货", getInventoryList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	bar1 := charts.NewBar()
+	bar1.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "Bar 示例图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+	bar1.SetXAxis(reportDateItems).
+		AddSeries("固定资产", getFixedAssetList(infoList)).
+		AddSeries("在建工程", getCipList(infoList)).
+		AddSeries("员工薪酬", getStaffSalaryPayableList(infoList)).
+		AddSeries("未分配利润", getUnAssignProfitList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	page := components.NewPage()
+	page.SetLayout(components.PageFlexLayout)
+	page.AddCharts(
+		bar,
+		bar1,
+	)
+
+	reportPath, _ := global.GetReportPath()
+	fileName := filepath.Join(reportPath, "asset.html")
+	f, err := os.Create(fileName)
 	if err != nil {
-		log.Error().Msgf("failed to request: %v", err)
+		log.Error().Msgf("fail to create file, error is: %v", err)
 		return
 	}
+	page.Render(io.MultiWriter(f))
+}
 
-	content, err := ioutil.ReadAll(resp.Body)
+func GenerateCashFlowReport(stockId string) {
+	infoList := GetCashFlowReport(stockId)
+
+	reportDateItems := getCashFlowReportDateList(infoList)
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "现金流量图"}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} 亿"},
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: true,
+		}),
+	)
+	bar.SetXAxis(reportDateItems).
+		AddSeries("销售", getSalesList(infoList)).
+		AddSeries("成本", getOperateList(infoList)).
+		AddSeries("投资", getInvestList(infoList)).
+		AddSeries("金融", getFinanceList(infoList)).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{
+				Show:     true,
+				Position: "top",
+			}),
+		)
+
+	reportPath, _ := global.GetReportPath()
+	fileName := filepath.Join(reportPath, "cash_flow.html")
+	f, err := os.Create(fileName)
 	if err != nil {
-		log.Error().Msgf("get response error: %v", err)
-		resp.Body.Close()
+		log.Error().Msgf("fail to create file, error is: %v", err)
 		return
 	}
-	resp.Body.Close()
-
-	log.Info().Msgf("content is: %s", string(content))
+	bar.Render(f)
 }
