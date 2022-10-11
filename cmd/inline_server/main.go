@@ -15,7 +15,7 @@ import (
 	"assistantor/model"
 	"assistantor/repository"
 	"assistantor/services"
-	"context"
+	"assistantor/services/company_report"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/casbin/casbin/v2"
@@ -194,17 +194,22 @@ func StartServer() {
 
 func main() {
 
+	//company_report.GetCompanyReport("002156", 2)
+	company_report.GetCompanyReport("601615", 2)
+
+
+
 	//company_report.GetAssetsLiabilityReport("SZ002156")
 	//company_report.GetProfitReport("SZ002156")
 	//company_report.GetCashFlowReport("SZ002156")
-
+	//
 	//company_report.GenerateCashFlowReport("SZ002156")
 	//company_report.GenerateAssetsLiabilityReport("SZ002156")
 	//company_report.GenerateProfitReport("SZ002156")
 
-	ctx := context.Background()
-	go services.StartDispatchOrder(ctx, &conf.Kafka)  // 订单分发
-	go services.OrderTimeoutMonitor(ctx, &conf.Redis) // 订单超时
-	go global.StartCleanKey(ctx)
-	StartServer()
+	//ctx := context.Background()
+	//go services.StartDispatchOrder(ctx, &conf.Kafka)  // 订单分发
+	//go services.OrderTimeoutMonitor(ctx, &conf.Redis) // 订单超时
+	//go global.StartCleanKey(ctx)
+	//StartServer()
 }

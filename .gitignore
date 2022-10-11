@@ -3,3 +3,4 @@
 *.toml
 *.sum
 *.db
+/static
