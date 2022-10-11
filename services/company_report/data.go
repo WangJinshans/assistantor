@@ -77,11 +77,11 @@ func GetCompanyReport(stockId string, typeNumber int) (result string, err error)
 		content = string(bs)
 	}
 
-	result = GetLatestReport(content)
+	result = GetLatestReport(content, stockId)
 	return
 }
 
-func DownloadReport(webUrl string) {
+func DownloadReport(webUrl string, stockId string) {
 	header := make(map[string]string)
 	header["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
 	header["Accept-Encoding"] = "deflate"
@@ -123,7 +123,7 @@ func DownloadReport(webUrl string) {
 	title := GetTitle(bs)
 	content := strings.Replace(string(bs), title, "test", -1)
 	reportPath, _ := global.GetTempPath()
-	fileName := filepath.Join(reportPath, "tmp.html")
+	fileName := filepath.Join(reportPath, fmt.Sprintf("%s.html", stockId))
 	f, _ := os.Create(fileName)
 	f.Write([]byte(content))
 }
@@ -138,7 +138,7 @@ func GetTitle(content []byte) (title string) {
 }
 
 // 当前第一份报告
-func GetLatestReport(content string) (reportUrl string) {
+func GetLatestReport(content string, stockId string) (reportUrl string) {
 	dom, err := goquery.NewDocumentFromReader(strings.NewReader(content))
 	if err != nil {
 		log.Error().Msgf("message decode error, error is: %v", err)
@@ -150,7 +150,7 @@ func GetLatestReport(content string) (reportUrl string) {
 		reportUrl = fmt.Sprintf("http://vip.stock.finance.sina.com.cn%s", webUrl)
 	}
 
-	DownloadReport(reportUrl)
+	DownloadReport(reportUrl, stockId)
 	return
 }
 
